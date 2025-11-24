@@ -1,0 +1,10 @@
+version: "3"
+
+tasks:
+  install:
+    cmds:
+      - uv sync
+
+  start:
+    cmds:
+      - uv run python serve.py

@@ -1,0 +1,18 @@
+[project]
+name = "saaransh_backend"
+version = "1.0.0"
+description = "Backend service for Saaransh application"
+requires-python = "==3.12.*"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "python-dotenv",
+    "PyYAML",
+    "litellm",
+    "sqlalchemy",
+    "sentence_transformers"
+]
+
+[tool.uv.scripts]
+start = ["uvicorn", "app.main:app", "--reload"]
