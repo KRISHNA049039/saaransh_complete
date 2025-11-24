@@ -13,6 +13,3 @@ dependencies = [
     "sqlalchemy",
     "sentence_transformers"
 ]
-
-[tool.uv.scripts]
-start = ["uvicorn", "app.main:app", "--reload"]
