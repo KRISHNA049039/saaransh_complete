@@ -11,5 +11,6 @@ dependencies = [
     "PyYAML",
     "litellm",
     "sqlalchemy",
-    "sentence_transformers"
+    "sentence_transformers",
+    "asyncpg"
 ]

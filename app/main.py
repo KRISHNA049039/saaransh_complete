@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.settings import settings
+from app.handlers.comments_handler import router as comments_router
 
 app = FastAPI(
     title="saaransh_backend",
@@ -17,6 +18,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(comments_router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():

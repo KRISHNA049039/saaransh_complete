@@ -20,10 +20,14 @@ class Settings:
         )
 
         self.DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
-        self.DATABASE_URL: str = os.getenv("DATABASE_URL", "")
         self.LLM_SDK: str = os.getenv("LLM_SDK", "litellm")
 
         self.SERVER_HOST: str = os.getenv("SERVER_HOST", "127.0.0.1")
         self.SERVER_PORT: int = int(os.getenv("SERVER_PORT", "8000"))
+
+        self.DB_URL: str = os.getenv("DB_URL", "")
+        self.DB_SCHEMA: str = os.getenv("DB_SCHEMA","")
+        self.DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE",""))
+        self.DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW",""))
 
 settings = Settings()
