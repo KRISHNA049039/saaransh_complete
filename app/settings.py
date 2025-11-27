@@ -18,7 +18,7 @@ class Settings:
             "CORS_ORIGINS",
             "http://localhost:5173,http://127.0.0.1:5173",
         )
-        self.LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+        self.LOG_LEVEL: str = os.getenv("LOG_LEVEL", "DEBUG")
 
         self.LLM_SDK: str = os.getenv("LLM_SDK", "litellm")
 
@@ -27,7 +27,7 @@ class Settings:
 
         self.DB_URL: str = os.getenv("DB_URL", "")
         self.DB_SCHEMA: str = os.getenv("DB_SCHEMA","")
-        self.DB_DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
+        self.DB_DEBUG: bool = os.getenv("DB_DEBUG", "false").lower() == "true"
         self.DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE",""))
         self.DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW",""))
 
