@@ -2,9 +2,9 @@ from sqlalchemy import select, update
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.orm.comments import Comment
-from app.accessors.base_accessor import BaseAccessor
+from app.accessors.base_db_accessor import BaseDBAccessor
 
-class CommentAccessor(BaseAccessor[Comment]):
+class CommentAccessor(BaseDBAccessor[Comment]):
     model = Comment
 
     async def close_active_record(self, comment_id, session: AsyncSession):
