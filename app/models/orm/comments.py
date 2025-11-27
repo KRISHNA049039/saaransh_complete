@@ -17,7 +17,7 @@ class Comment(Base):
     __scd2__ = True
 
     comment_sk: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    comment_id: Mapped[str] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    comment_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     summary_id: Mapped[Optional[str]] = mapped_column(UUID(as_uuid=True))
     content: Mapped[Optional[str]] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"), nullable=False)
