@@ -1,24 +1,37 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.settings import settings
+
+from app.components.embeddings_model import EmbeddingModelSingleton
+from app.config.logging import setup_logging
 from app.handlers.comments_handler import router as comments_router
 from app.handlers.summaries_handler import router as summaries_router
-from app.config.logging import setup_logging
 from app.settings import settings
 
 setup_logging(settings.LOG_LEVEL)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    EmbeddingModelSingleton.get_model()
+    print("Embedding model loaded at startup")
+
+    yield
+    print("Shutting down Saaransh backend")
+
 
 app = FastAPI(
     title="saaransh_backend",
     description="Backend service for Saaransh application",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 origins = settings.CORS_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,         
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
