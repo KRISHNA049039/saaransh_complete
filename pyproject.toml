@@ -12,5 +12,6 @@ dependencies = [
     "litellm",
     "sqlalchemy",
     "sentence_transformers",
+    "pgvector",
     "asyncpg"
 ]
