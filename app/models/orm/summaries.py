@@ -28,7 +28,7 @@ class Summary(Base):
     end_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     status_id: Mapped[Optional[int]] = mapped_column(BigInteger)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSON)
+    meta_data: Mapped[Optional[dict]] = mapped_column("metadata", JSON)
 
     is_active: Mapped[bool] = mapped_column(
         Boolean, server_default=text("true"), nullable=False

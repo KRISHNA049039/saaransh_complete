@@ -1,0 +1,43 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.accessors.llm.llm_accessor import LLMAccessor
+from app.accessors.llm.llm_factory import get_llm_accessor
+from app.builders.summaries_builder import SummaryBuilder
+from app.config.database import get_session
+from app.models.request.summaries_request import StagingCreateRequest, SummaryCreateRequest, SummaryFetchFilter
+from app.utils.sort_util import SortQuery, parse_sort_query, sort_by
+
+router = APIRouter(prefix="/summaries", tags=["summaries"])
+
+@router.post("/staging")
+async def create_staging_summary(
+    request: StagingCreateRequest,
+    session: AsyncSession = Depends(get_session),
+    llm_accessor: LLMAccessor= Depends(get_llm_accessor)
+):
+    builder = SummaryBuilder(session = session, llm_accessor=llm_accessor)
+    return await builder.build_staging_summary(request)
+
+@router.post("/final")
+async def create_final_summaries(
+    request: SummaryCreateRequest,
+    session: AsyncSession = Depends(get_session),
+    llm_accessor: LLMAccessor= Depends(get_llm_accessor)
+):
+    builder = SummaryBuilder(session = session, llm_accessor=llm_accessor)
+    return await builder.build_summary_from_staging(request)
+
+@router.get("")
+async def fetch_summaries(
+    filters: SummaryFetchFilter = Depends(),
+    sort_query: SortQuery = Depends(parse_sort_query),
+    session: AsyncSession = Depends(get_session)
+):
+    DEFAULT_SORT = sort_by("-created_date")
+    if not sort_query.sorts:
+        sort_query = DEFAULT_SORT
+    builder = SummaryBuilder(session)
+    return await builder.build_summaries_fetch(filters, sort_query)
+
+

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.settings import settings
 from app.handlers.comments_handler import router as comments_router
+from app.handlers.summaries_handler import router as summaries_router
 from app.config.logging import setup_logging
 from app.settings import settings
 
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(comments_router, prefix="/api/v1")
+app.include_router(summaries_router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():
