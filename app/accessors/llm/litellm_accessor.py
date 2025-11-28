@@ -1,14 +1,19 @@
 import json
 import asyncio
 import logging
+import litellm
 from litellm import acompletion
 from litellm.utils import token_counter
+
+litellm.suppress_debug_info = True
+for key in logging.Logger.manager.loggerDict.keys():
+    if "litellm" in key.lower():
+        logging.getLogger(key).setLevel(logging.CRITICAL)
 
 from app.tools.registry import TOOL_REGISTRY, TOOL_DEFINITIONS
 from app.accessors.llm.llm_accessor import LLMAccessor
 
 logger = logging.getLogger(__name__)
-
 
 class LiteLLMAccessor(LLMAccessor):
     def __init__(self):
