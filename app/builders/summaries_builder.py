@@ -1,3 +1,4 @@
+from queue import Empty
 import asyncio, logging, uuid
 from uuid import UUID
 
@@ -7,10 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.accessors.llm.llm_accessor import LLMAccessor
 from app.accessors.llm.llm_factory import get_llm_accessor
 from app.accessors.summaries_accessor import SummaryAccessor
+from app.builders.content_embeddings_builder import ContentEmbeddingsBuilder
 from app.models.orm.summaries import Summary
 from app.models.request.summaries_request import StagingCreateRequest, SummaryCreateRequest, SummaryFetchFilter
 from app.models.task_data import UserData
-from typing import List
+from typing import List, Optional
 import app.utils.prompts as prompts_template 
 
 import app.utils.formatters as fmt
@@ -27,6 +29,7 @@ class SummaryBuilder:
         self.session = session
         self.summary_accessor = summary_accessor or SummaryAccessor()
         self.llm_accessor = llm_accessor or get_llm_accessor()
+        self.embedding_builder = ContentEmbeddingsBuilder()
         
     async def build_prompts_not_chunked(self, user_data: UserData) -> List[tuple[str, List[str]]]:
         employee_info = fmt.employee(user_data)
@@ -42,13 +45,25 @@ class SummaryBuilder:
 
             summary_id = str(uuid.uuid4())
             model_name = request.model or "gemini/gemini-2.5-flash"
+            
+            llm_future = self.llm_accessor.get_response(
+                model_name,
+                prompt,
+                request.user_prompt,
+                prompts_template.STAGING_SUMMARY_PROMPT,
+                )
 
-            response = await self.llm_accessor.get_response(model_name, prompt, request.user_prompt, prompts_template.STAGING_SUMMARY_PROMPT)        
-                
+            embedding_future = self.embedding_builder.process_and_store_embeddings(
+                summary_id=summary_id,
+                content=request.user_data,
+                session=self.session,
+                )
+
+            llm_text, _ = await asyncio.gather(llm_future, embedding_future)
             
             summary = Summary(
             summary_id=summary_id,
-            content=response,
+            content=llm_text,
             start_date=None,
             end_date=None,
             meta_data={"model": model_name},
@@ -132,3 +147,99 @@ class SummaryBuilder:
         except Exception as exc:
             logger.error(f"Failed to fetch comments: {exc}", exc_info=True)
             raise
+
+    
+    async def edit_summary_via_LLM(
+        self,
+        user_query: str,
+        staging: bool,
+        content: Optional[str] = None,
+        model_name: str = "gemini/gemini-2.5-flash",
+        summary_sk: Optional[int] = None,
+        summary_id: Optional[UUID] = None,
+
+    ):
+        if staging:
+            system_prompt = prompts_template.EDIT_STAGING_PROMPT
+        else:
+            system_prompt = prompts_template.EDIT_PROMPT
+
+        if content is None or "":
+            filters = SummaryFetchFilter(
+                summary_id=summary_id,
+                summary_sk=summary_sk,
+                effective_only=bool(summary_id),
+                )
+            result = await self.summary_accessor.fetch(session=self.session, filters=filters, sort=None)      
+            summary = result[0].content or ""
+            if not result:
+                raise ValueError(f"No summary found for summary_id={summary_id}")
+
+        response = await self.llm_accessor.get_response(
+            model=model_name,
+            content=summary,
+            user_prompt=f"{user_query} summary_id={summary_id}",
+            system_prompt=system_prompt,
+            use_tools=True,
+        )
+
+        new_summary = Summary(
+            summary_id=summary_id,
+            content=response,
+            start_date=None,
+            end_date=None,
+            meta_data={"model": model_name},
+            effective_from=datetime.now(timezone.utc),
+            effective_to=None
+        )
+
+        inserted = await self.summary_accessor.insert(new_summary, self.session)
+        return inserted
+
+    
+    async def save_modified_summary(
+        self,
+        modified_content: str,
+        summary_sk: int | None = None,
+        summary_id: UUID | None = None,
+    ):
+
+        filters = SummaryFetchFilter(
+                summary_sk=summary_sk,
+                summary_id=summary_id,
+                effective_only=bool(summary_id),
+                )
+
+        result = await self.summary_accessor.fetch(
+            session=self.session,
+            filters=filters,
+            sort=None
+        )
+
+        if not result:
+            raise ValueError(f"No summary found with summary_id={summary_id}")
+
+        old_record = result[0]
+
+        await self.summary_accessor.close_active_record(
+            summary_id=summary_id,
+            session=self.session,
+        )
+
+        summary = Summary(
+            summary_id=summary_id,
+            content=modified_content,
+            start_date=old_record.start_date,
+            end_date=old_record.end_date,
+            meta_data=old_record.meta_data,
+            effective_from=datetime.now(timezone.utc),
+            effective_to=None
+            )
+
+        inserted = await self.summary_accessor.insert(summary, self.session)
+
+        logger.debug(
+            f"Saved modified summary {summary_id}"
+        )
+
+        return inserted

@@ -1,11 +1,13 @@
+from typing import Optional
 from fastapi import APIRouter, Depends
+from pydantic import UUID4, BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.accessors.llm.llm_accessor import LLMAccessor
 from app.accessors.llm.llm_factory import get_llm_accessor
 from app.builders.summaries_builder import SummaryBuilder
 from app.config.database import get_session
-from app.models.request.summaries_request import StagingCreateRequest, SummaryCreateRequest, SummaryFetchFilter
+from app.models.request.summaries_request import StagingCreateRequest, SummaryCreateRequest, SummaryEditRequest, SummarySaveRequest, SummaryFetchFilter
 from app.utils.sort_util import SortQuery, parse_sort_query, sort_by
 
 router = APIRouter(prefix="/summaries", tags=["summaries"])
@@ -19,6 +21,7 @@ async def create_staging_summary(
     builder = SummaryBuilder(session = session, llm_accessor=llm_accessor)
     return await builder.build_staging_summary(request)
 
+
 @router.post("/final")
 async def create_final_summaries(
     request: SummaryCreateRequest,
@@ -27,6 +30,7 @@ async def create_final_summaries(
 ):
     builder = SummaryBuilder(session = session, llm_accessor=llm_accessor)
     return await builder.build_summary_from_staging(request)
+
 
 @router.get("")
 async def fetch_summaries(
@@ -41,3 +45,25 @@ async def fetch_summaries(
     return await builder.build_summaries_fetch(filters, sort_query)
 
 
+
+@router.put("/save")
+async def save_modified_summary(
+    request: SummarySaveRequest,
+    session: AsyncSession = Depends(get_session)
+):
+    builder = SummaryBuilder(session)
+    return await builder.save_modified_summary(summary_id=request.summary_id,
+                                               summary_sk=request.summary_sk, 
+                                               modified_content=request.content)
+
+@router.put("/edit")
+async def edit_summary_via_LLM(
+    request: SummaryEditRequest,
+    session: AsyncSession = Depends(get_session)
+):
+    builder = SummaryBuilder(session)
+    return await builder.edit_summary_via_LLM(summary_id=request.summary_id,
+                                               summary_sk=request.summary_sk, 
+                                               content=request.content,
+                                               user_query=request.user_prompt,
+                                               staging=request.staging)

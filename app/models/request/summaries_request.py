@@ -21,3 +21,16 @@ class SummaryCreateRequest(BaseModel):
     summary_id: Optional[UUID4] = None
     summary_sk: Optional[int] = None
     user_prompt: Optional[str] = None
+
+
+class SummarySaveRequest(BaseModel):
+    summary_sk: Optional[int] = None
+    summary_id: Optional[UUID4] = None
+    content: str
+
+class SummaryEditRequest(BaseModel):
+    summary_sk: Optional[int] = None
+    summary_id: Optional[UUID4] = None
+    content: Optional[str]  = None
+    user_prompt: str
+    staging: bool
