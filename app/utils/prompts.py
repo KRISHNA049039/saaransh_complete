@@ -31,6 +31,14 @@ EDIT_PROMPT = """
 You are an intelligent assistant. Edit the summary report given to you based on the user requirement mentioned and RAG context. No commentary.
 the report is supposed to be wysiwyg editor's html output
 """
+
+EDIT_STAGING_PROMPT="""
+Edit the intermediate report based on the user instructions availing RAG tool calling capabilities. 
+Add a new paragraph if you don't know where to edit
+the output should be wysiwyg editor's html output
+"""
+
+
 FINAL_SUMMARY_PROMPT = """
 "Based on the following concatenated reports from different chunks of an employee's work data, 
 provide a single, comprehensive, and professional year-end self-assessment report. "
@@ -42,4 +50,26 @@ STAGING_SUMMARY_PROMPT = """
 Generate the complete overview of each task
 separate the overvies for clarty
 these overviews will be used for final summary generation
+"""
+STAGING_SUMMARY_PROMPT = """
+You are an expert analyst generating intermediate summaries.
+
+Given the employee profile and a list of tasks with descriptions, comments, and logs:
+
+1. Produce a **clear and comprehensive overview of each task**.
+2. **Separate each task overview with a clear divider**, such as "\n\n---\n\n".
+3. Capture important details:
+   - Task purpose or goal
+   - Key actions taken
+   - Important comments or notes
+   - Issues, blockers, or delays
+   - Final outcomes or current status
+
+These overviews will be used for final summary generation, so ensure they are:
+- Complete
+- Concise but detailed
+- Not repetitive
+- Easy for another model to read and aggregate
+
+Only output the task overviews.
 """
