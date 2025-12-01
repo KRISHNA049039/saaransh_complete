@@ -13,5 +13,7 @@ dependencies = [
     "sqlalchemy",
     "sentence_transformers",
     "pgvector",
-    "asyncpg"
+    "asyncpg",
+    "authlib",
+    "joserfc"
 ]

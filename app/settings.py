@@ -16,7 +16,7 @@ class Settings:
     def _load_env(self):
         self.CORS_ORIGINS: List[str] = get_list_env(
             "CORS_ORIGINS",
-            "http://localhost:5173,http://127.0.0.1:5173",
+            "http://localhost:5174,http://127.0.0.1:5174",
         )
         self.LOG_LEVEL: str = os.getenv("LOG_LEVEL", "DEBUG")
 
@@ -30,5 +30,10 @@ class Settings:
         self.DB_DEBUG: bool = os.getenv("DB_DEBUG", "false").lower() == "true"
         self.DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE",""))
         self.DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW",""))
+
+
+        self.KEYCLOAK_URL: str = os.getenv("KEYCLOAK_URL", "http://localhost:8081")
+        self.KEYCLOAK_RESOURCE_REALM: str = os.getenv("KEYCLOAK_RESOURCE_REALM", "saaransh")
+
 
 settings = Settings()

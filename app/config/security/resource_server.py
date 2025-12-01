@@ -1,0 +1,123 @@
+import httpx
+from joserfc import jwt
+from joserfc.jwk import KeySet
+from joserfc.errors import JoseError
+from fastapi import HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from functools import lru_cache
+from typing import Any, Literal, Optional
+from app.settings import settings
+
+KEYCLOAK_URL = settings.KEYCLOAK_URL
+KEYCLOAK_REALM = settings.KEYCLOAK_RESOURCE_REALM
+JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
+ISSUER = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}"
+
+security = HTTPBearer(auto_error=False)
+
+
+@lru_cache()
+def load_jwks() -> KeySet:
+    try:
+        response = httpx.get(JWKS_URL, timeout=10.0)
+        response.raise_for_status()
+        return KeySet.import_key_set(response.json())
+    except httpx.ConnectError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Cannot connect to Keycloak: {str(error)}"
+        )
+    except httpx.HTTPError as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch JWKS: {str(error)}"
+        )
+
+
+def verify_token(token: str) -> dict[str, Any]:
+    jwks = load_jwks()
+
+    try:
+        decoded_token_object = jwt.decode(token, jwks)
+        claims = dict(decoded_token_object.claims)
+        
+        # exp, nbf, iat
+        claims_registry = jwt.JWTClaimsRegistry()
+        claims_registry.validate(claims)
+        
+        if claims.get("iss") != ISSUER:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid issuer. Expected {ISSUER}, got {claims.get('iss')}"
+            )
+        
+        if "sub" not in claims:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token missing 'sub' claim"
+            )
+        
+        return claims
+        
+    except JoseError as error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token validation failed: {str(error)}",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    except HTTPException:
+        raise
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token verification error: {str(error)}",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+
+async def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+) -> Optional[dict[str, Any]]:
+    """
+    Returns user claims if authenticated, None otherwise.
+    """
+    if not credentials:
+        return None
+    
+    return verify_token(credentials.credentials)
+
+
+async def require_auth(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> dict[str, Any]:
+    """
+    Authentication dependency. Raises 401 if not authenticated.
+    """
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    return verify_token(credentials.credentials)
+
+
+def require_roles(*roles: str, mode: Literal["any", "all"] = "any"):
+
+    async def checker(claims: dict[str, Any] = Depends(require_auth)) -> dict[str, Any]:
+        user_roles = set(claims.get("realm_access", {}).get("roles", []))
+        required = set(roles)
+        if mode == "all":
+            authorized = user_roles.issuperset(required)
+        else:
+            authorized = not user_roles.isdisjoint(required)
+
+        if not authorized:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Missing permissions. Required {mode} of: {', '.join(roles)}"
+            )
+        return claims
+        
+    return checker

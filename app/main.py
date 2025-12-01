@@ -6,6 +6,7 @@ from app.components.embeddings_model import EmbeddingModelSingleton
 from app.config.logging import setup_logging
 from app.handlers.comments_handler import router as comments_router
 from app.handlers.summaries_handler import router as summaries_router
+from app.handlers.auth_test_handler import router as auth_test_router
 from app.settings import settings
 
 setup_logging(settings.LOG_LEVEL)
@@ -39,6 +40,7 @@ app.add_middleware(
 
 app.include_router(comments_router, prefix="/api/v1")
 app.include_router(summaries_router, prefix="/api/v1")
+app.include_router(auth_test_router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():
