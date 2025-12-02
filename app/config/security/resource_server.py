@@ -10,6 +10,7 @@ from typing import Any, Literal, Optional
 from app.config.security.security_context import SecurityContext
 from app.settings import settings
 from fastapi import Request
+
 KEYCLOAK_URL = settings.KEYCLOAK_URL
 KEYCLOAK_REALM = settings.KEYCLOAK_RESOURCE_REALM
 JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
@@ -43,21 +44,14 @@ def verify_token(token: str) -> dict[str, Any]:
         decoded_token_object = jwt.decode(token, jwks)
         claims = dict(decoded_token_object.claims)
         
-        # exp, nbf, iat
-        claims_registry = jwt.JWTClaimsRegistry()
+        claims_registry = jwt.JWTClaimsRegistry(
+            exp={"essential": True},
+            nbf={"essential": False},
+            iat={"essential": False},
+            iss={"value": ISSUER},
+            sub={"essential": True}
+        )
         claims_registry.validate(claims)
-        
-        if claims.get("iss") != ISSUER:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Invalid issuer. Expected {ISSUER}, got {claims.get('iss')}"
-            )
-        
-        if "sub" not in claims:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token missing 'sub' claim"
-            )
         
         return claims
         
