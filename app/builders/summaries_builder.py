@@ -174,6 +174,11 @@ class SummaryBuilder:
             summary = result[0].content or ""
             if not result:
                 raise ValueError(f"No summary found for summary_id={summary_id}")
+        else:
+            summary = content
+
+        if summary is None or "":
+            raise ValueError(f"content can't be empty")
 
         response = await self.llm_accessor.get_response(
             model=model_name,

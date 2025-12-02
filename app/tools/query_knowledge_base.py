@@ -48,7 +48,7 @@ tool_query_knowledge_base_definition = {
     "type": "function",
     "function": {
         "name": "query_knowledge_base",
-        "description": "Search the vector knowledge base for relevant context. minimum top_k is 3 and you can call this tool any number of times",
+        "description": "Search the vector knowledge base for relevant context. minimum top_k is 3 and you can call this tool any number of times but only use it when you think rag is required for the user instruction",
         "parameters": {
             "type": "object",
             "properties": {
