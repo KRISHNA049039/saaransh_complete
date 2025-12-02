@@ -31,9 +31,14 @@ class Settings:
         self.DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE",""))
         self.DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW",""))
 
+        self.NIRDESH_DB_SERVICE_URL: str = str(os.getenv("NIRDESH_DB_SERVICE_URL",""))
 
-        self.KEYCLOAK_URL: str = os.getenv("KEYCLOAK_URL", "http://localhost:8081")
-        self.KEYCLOAK_RESOURCE_REALM: str = os.getenv("KEYCLOAK_RESOURCE_REALM", "saaransh")
+
+        self.KEYCLOAK_URL: str = os.getenv("KEYCLOAK_URL", "")
+        self.KEYCLOAK_RESOURCE_REALM: str = os.getenv("KEYCLOAK_RESOURCE_REALM", "")
+        self.KEYCLOAK_CLIENT_REALM: str = os.getenv("KEYCLOAK_CLIENT_REALM", "")
+        self.KEYCLOAK_M2M_CLIENT_ID: str = os.getenv("KEYCLOAK_M2M_CLIENT_ID", "")
+        self.KEYCLOAK_M2M_CLIENT_SECRET: str =os.getenv("KEYCLOAK_M2M_CLIENT_SECRET", "")
 
 
 settings = Settings()
