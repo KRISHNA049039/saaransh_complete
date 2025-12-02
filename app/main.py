@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.components.embeddings_model import EmbeddingModelSingleton
 from app.config.logging import setup_logging
+from app.config.security.resource_server import require_auth
 from app.handlers.comments_handler import router as comments_router
 from app.handlers.summaries_handler import router as summaries_router
 from app.handlers.auth_test_handler import router as auth_test_router
@@ -38,9 +39,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(comments_router, prefix="/api/v1")
-app.include_router(summaries_router, prefix="/api/v1")
-app.include_router(auth_test_router, prefix="/api/v1")
+protected_router = APIRouter(
+    prefix="/api/v1",
+    dependencies=[Depends(require_auth)]
+)
+
+protected_router.include_router(comments_router)
+protected_router.include_router(summaries_router)
+protected_router.include_router(auth_test_router)
+
+app.include_router(protected_router)
 
 @app.get("/")
 def read_root():

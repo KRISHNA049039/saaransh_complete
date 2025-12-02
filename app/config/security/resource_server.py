@@ -1,3 +1,4 @@
+
 import httpx
 from joserfc import jwt
 from joserfc.jwk import KeySet
@@ -6,8 +7,9 @@ from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from functools import lru_cache
 from typing import Any, Literal, Optional
+from app.config.security.security_context import SecurityContext
 from app.settings import settings
-
+from fastapi import Request
 KEYCLOAK_URL = settings.KEYCLOAK_URL
 KEYCLOAK_REALM = settings.KEYCLOAK_RESOURCE_REALM
 JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
@@ -76,19 +78,24 @@ def verify_token(token: str) -> dict[str, Any]:
 
 
 async def get_current_user(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
-) -> Optional[dict[str, Any]]:
-    """
-    Returns user claims if authenticated, None otherwise.
-    """
+) -> Optional[dict]:
+    if hasattr(request.state, "claims"):
+        return request.state.claims
+
     if not credentials:
         return None
-    
-    return verify_token(credentials.credentials)
+
+    claims = verify_token(credentials.credentials)
+    request.state.claims = claims
+    return claims
+
 
 
 async def require_auth(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+        request: Request,
+        credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> dict[str, Any]:
     """
     Authentication dependency. Raises 401 if not authenticated.
@@ -100,7 +107,17 @@ async def require_auth(
             headers={"WWW-Authenticate": "Bearer"}
         )
     
-    return verify_token(credentials.credentials)
+    claims = verify_token(credentials.credentials)
+    request.state.claims = claims
+    return claims
+
+
+async def get_security_context(
+    claims: dict = Depends(get_current_user)
+) -> Optional[SecurityContext]:
+    if not claims:
+        return None
+    return SecurityContext.from_claims(claims)
 
 
 def require_roles(*roles: str, mode: Literal["any", "all"] = "any"):

@@ -1,37 +1,25 @@
 from fastapi import APIRouter, Depends
 from typing import Optional
 from app.config.security.resource_server import (
-    get_current_user, 
-    require_auth, 
+    get_security_context, 
     require_roles
 )
 from app.config.security.security_context import SecurityContext
 
-router = APIRouter(prefix="/test", tags=["test"])
+router = APIRouter(prefix="/test/auth", tags=["test"])
 
 
 @router.get("/whoami")
-async def who_am_i(claims: Optional[dict] = Depends(get_current_user)):
-    if not claims:
+async def who_am_i(context: Optional[SecurityContext] = Depends(get_security_context)):
+    if not context:
         return {"authenticated": False}
     
-    context = SecurityContext.from_claims(claims)
     return {
         "authenticated": True,
         "user_id": context.user_id,
         "username": context.username,
         "email": context.email,
         "roles": context.roles,
-    }
-
-
-@router.get("/protected")
-async def protected_route(claims: dict = Depends(require_auth)):
-    context = SecurityContext.from_claims(claims)
-    return {
-        "message": "You are authenticated!",
-        "user": context.username,
-        "roles": context.roles
     }
 
 
