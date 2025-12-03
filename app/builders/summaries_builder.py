@@ -179,13 +179,18 @@ class SummaryBuilder:
 
         if summary is None or "":
             raise ValueError(f"content can't be empty")
-
+        
         response = await self.llm_accessor.get_response(
             model=model_name,
             content=summary,
             user_prompt=f"{user_query} summary_id={summary_id}",
             system_prompt=system_prompt,
             use_tools=True,
+        )
+
+        await self.summary_accessor.close_active_record(
+            summary_id=summary_id,
+            session=self.session,
         )
 
         new_summary = Summary(
