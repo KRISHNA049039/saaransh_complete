@@ -12,6 +12,12 @@ class KeycloakCreateUser(BaseModel):
     emailVerified: bool = False
 
 
+class KeycloakEditUser(BaseModel):
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    enabled: Optional[bool] = None
+
+
 class KeycloakUserRepresentation(BaseModel):
     id: Optional[str]
     username: Optional[str]
@@ -32,14 +38,17 @@ class PartialImportUserRepresentation(BaseModel):
     emailVerified: Optional[bool] = False
     realmRoles: Optional[List[str]] = None
 
+
 class ResourceExistBehavior(str, Enum):
     FAIL = "FAIL"
     SKIP = "SKIP"
     OVERWRITE = "OVERWRITE"
 
+
 class PartialImportUsersPayload(BaseModel):
     users: List[PartialImportUserRepresentation]
     ifResourceExists: ResourceExistBehavior
+
 
 class PartialImportResult(BaseModel):
     action: str
@@ -47,13 +56,9 @@ class PartialImportResult(BaseModel):
     resourceName: str
     id: str
 
+
 class PartialImportResponse(BaseModel):
     overwritten: int
     added: int
     skipped: int
     results: List[PartialImportResult]
-
-
-
-
-
