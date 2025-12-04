@@ -44,5 +44,5 @@ class User(Base):
 
     modified_by: Mapped[Optional[UUID]] = mapped_column(UUID(as_uuid=True))
 
-    effective_from: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=False))
-    effective_to: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=False))
+    effective_from: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    effective_to: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))

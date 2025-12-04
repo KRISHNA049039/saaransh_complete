@@ -1,10 +1,11 @@
 from typing import Optional
+from uuid import UUID
 
 
 class SecurityContext:
     def __init__(
         self,
-        user_id: str,
+        user_id: UUID,
         username: str,
         roles: list[str],
         email: Optional[str] = None,

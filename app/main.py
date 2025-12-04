@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+
 from app.components.embeddings_model import EmbeddingModelSingleton
 from app.config.logging import setup_logging
 from app.config.security.resource_server import require_auth
@@ -9,6 +10,7 @@ from app.handlers.comments_handler import router as comments_router
 from app.handlers.summaries_handler import router as summaries_router
 from app.handlers.auth_test_handler import router as auth_test_router
 from app.handlers.kc_test_handler import router as kc_test_router
+from app.handlers.users_handler import router as users_router
 from app.settings import settings
 
 setup_logging(settings.LOG_LEVEL)
@@ -47,6 +49,7 @@ protected_router = APIRouter(
 
 protected_router.include_router(comments_router)
 protected_router.include_router(summaries_router)
+protected_router.include_router(users_router)
 
 test_router = APIRouter(
     prefix="/api/v1/test",
