@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Optional
 from app.settings import settings
-from app.config.security.oauth2_client import oauth2_client
+from app.config.security.oauth2_client import m2m_oauth2_client
 from app.config.security.resource_server import (
     get_security_context, 
     require_roles
 )
 from app.config.security.security_context import SecurityContext
 
-router = APIRouter(prefix="/test/auth", tags=["test"])
+router = APIRouter(prefix="/auth", tags=["test"])
 
 
 @router.get("/whoami")
@@ -35,11 +35,11 @@ async def admin_only(claims: dict = Depends(require_roles("SAARANSH_ADMIN"))):
 
 
 @router.get("/m2m-check")
-async def m2m_check_2():
+async def m2m_check():
     try:
         BASE_URL = settings.NIRDESH_DB_SERVICE_URL
-        response = await oauth2_client.get(f"{BASE_URL}/api/users/m2m")
-        token_info = oauth2_client.get_token_details()
+        response = await m2m_oauth2_client.get(f"{BASE_URL}/api/users/m2m")
+        token_info = m2m_oauth2_client.get_token_details()
 
         content_type = response.headers.get("content-type", "")
         if "application/json" in content_type:

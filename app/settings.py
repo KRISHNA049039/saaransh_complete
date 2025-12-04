@@ -16,7 +16,7 @@ class Settings:
     def _load_env(self):
         self.CORS_ORIGINS: List[str] = get_list_env(
             "CORS_ORIGINS",
-            "http://localhost:5174,http://127.0.0.1:5174",
+            "http://localhost:5173,http://127.0.0.1:5173",
         )
         self.LOG_LEVEL: str = os.getenv("LOG_LEVEL", "DEBUG")
 
@@ -39,6 +39,10 @@ class Settings:
         self.KEYCLOAK_CLIENT_REALM: str = os.getenv("KEYCLOAK_CLIENT_REALM", "")
         self.KEYCLOAK_M2M_CLIENT_ID: str = os.getenv("KEYCLOAK_M2M_CLIENT_ID", "")
         self.KEYCLOAK_M2M_CLIENT_SECRET: str =os.getenv("KEYCLOAK_M2M_CLIENT_SECRET", "")
+        self.KEYCLOAK_ADMIN_CLIENT_ID: str = os.getenv("KEYCLOAK_ADMIN_CLIENT_ID","saaransh_admin_client")
+        self.KEYCLOAK_ADMIN_CLIENT_SECRET: str = os.getenv("KEYCLOAK_ADMIN_CLIENT_SECRET", "aBSGZszfaWV2VajidbWcI9oZzPab9xJu")
+
+        self.KC_SAARANSH_ADMIN_ROLE: str = os.getenv("KC_SAARANSH_ADMIN_ROLE", "SAARANSH_ADMIN")
 
 
 settings = Settings()

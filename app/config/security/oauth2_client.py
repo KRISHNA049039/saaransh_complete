@@ -55,9 +55,19 @@ def create_oauth2_client() -> OAuth2Client:
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
         token_endpoint=TOKEN_URL,
+        )
+
+
+m2m_oauth2_client = create_oauth2_client()
+
+
+ADMIN_TOKEN_URL = (
+    f"{settings.KEYCLOAK_URL}/realms/{settings.KEYCLOAK_RESOURCE_REALM}/protocol/openid-connect/token"
     )
 
-
-oauth2_client = create_oauth2_client()
-
+kc_admin_client = OAuth2Client(
+    client_id=settings.KEYCLOAK_ADMIN_CLIENT_ID,
+    client_secret=settings.KEYCLOAK_ADMIN_CLIENT_SECRET,
+    token_endpoint=ADMIN_TOKEN_URL,
+    )
 
