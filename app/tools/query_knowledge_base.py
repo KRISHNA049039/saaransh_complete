@@ -43,6 +43,16 @@ async def query_knowledge_base(
             return f"Error querying knowledge base: {e}"
 
 
+def make_query_knowledge_base_wrapper(summary_id: UUID):
+    async def wrapper(query: str, top_k: int = 5):
+        return await query_knowledge_base(
+            query=query,
+            summary_id=summary_id,
+            top_k=top_k,
+        )
+
+    return wrapper
+
 
 tool_query_knowledge_base_definition = {
     "type": "function",
@@ -53,10 +63,9 @@ tool_query_knowledge_base_definition = {
             "type": "object",
             "properties": {
                 "query": {"type": "string"},
-                "summary_id": {"type": "string", "format": "uuid"},
                 "top_k": {"type": "integer"},
             },
-            "required": ["query", "summary_id"]
-        }
-    }
+            "required": ["query", "summary_id"],
+        },
+    },
 }

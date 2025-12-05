@@ -18,6 +18,10 @@ from app.models.request.summaries_request import (
 from app.models.task_data import UserData
 from typing import List, Optional
 from app.settings import settings
+from app.tools.query_knowledge_base import (
+    make_query_knowledge_base_wrapper,
+    tool_query_knowledge_base_definition,
+)
 import app.utils.prompts as prompts_template
 
 import app.utils.formatters as fmt
@@ -48,7 +52,17 @@ class SummaryBuilder:
         full_prompt = f"{employee_info}Tasks:\n{all_tasks_str}"
         return [(full_prompt, task_titles)]
 
-    async def build_staging_summary(self, request: StagingCreateRequest):
+    def build_tools(self, summary_id: UUID):
+        wrapped_tool = make_query_knowledge_base_wrapper(summary_id)
+        tool_registry = {
+            "query_knowledge_base": wrapped_tool,
+        }
+        tool_schemas = [tool_query_knowledge_base_definition]
+        return tool_schemas, tool_registry
+
+    async def build_staging_summary(
+        self, request: StagingCreateRequest, action_by: UUID
+    ):
         try:
             prompts = await self.build_prompts_not_chunked(request.user_data)
             (prompt, _) = prompts[0]
@@ -79,6 +93,7 @@ class SummaryBuilder:
                 meta_data={"model": model_name},
                 effective_from=datetime.now(timezone.utc),
                 effective_to=None,
+                created_by=action_by,
             )
             response = await self.summary_accessor.insert(summary, self.session)
             logger.debug(
@@ -89,7 +104,9 @@ class SummaryBuilder:
         except Exception as e:
             raise
 
-    async def build_summary_from_staging(self, request: SummaryCreateRequest):
+    async def build_summary_from_staging(
+        self, request: SummaryCreateRequest, action_by
+    ):
         try:
             model_name = request.model or settings.DEFAULT_LLM_MODEL
             db_response = None
@@ -157,40 +174,44 @@ class SummaryBuilder:
         self,
         user_query: str,
         staging: bool,
+        summary_id: UUID,
+        action_by: UUID,
         content: Optional[str] = None,
         model_name: str = settings.DEFAULT_LLM_MODEL,
         summary_sk: Optional[int] = None,
-        summary_id: Optional[UUID] = None,
     ):
         if staging:
             system_prompt = prompts_template.EDIT_STAGING_PROMPT
         else:
             system_prompt = prompts_template.EDIT_PROMPT
 
-        if content is None or "":
-            filters = SummaryFetchFilter(
-                summary_id=summary_id,
-                summary_sk=summary_sk,
-                effective_only=bool(summary_id),
-            )
-            result = await self.summary_accessor.fetch(
-                session=self.session, filters=filters, sort=None
-            )
-            summary = result[0].content or ""
-            if not result:
-                raise ValueError(f"No summary found for summary_id={summary_id}")
-        else:
-            summary = content
+        filters = SummaryFetchFilter(
+            summary_id=summary_id,
+            summary_sk=summary_sk,
+            effective_only=bool(summary_id),
+        )
+        result = await self.summary_accessor.fetch(
+            session=self.session, filters=filters, sort=None
+        )
+
+        if not result:
+            raise ValueError(f"No summary found for summary_id={summary_id}")
+        existing_record = result[0]
+        summary = content or existing_record.content
 
         if summary is None or "":
             raise ValueError(f"content can't be empty")
 
+        tool_schemas, tool_registry = self.build_tools(summary_id)
+
         response = await self.llm_accessor.get_response(
             model=model_name,
             content=summary,
-            user_prompt=f"{user_query} summary_id={summary_id}",
+            user_prompt=user_query,
             system_prompt=system_prompt,
             use_tools=True,
+            tool_schemas=tool_schemas,
+            tool_registry=tool_registry,
         )
 
         await self.summary_accessor.close_active_record(
@@ -201,11 +222,14 @@ class SummaryBuilder:
         new_summary = Summary(
             summary_id=summary_id,
             content=response,
-            start_date=None,
-            end_date=None,
+            start_date=existing_record.start_date,
+            end_date=existing_record.end_date,
             meta_data={"model": model_name},
             effective_from=datetime.now(timezone.utc),
             effective_to=None,
+            created_by=existing_record.created_by,
+            created_date=existing_record.created_date,
+            modified_by=action_by,
         )
 
         inserted = await self.summary_accessor.insert(new_summary, self.session)
@@ -214,6 +238,7 @@ class SummaryBuilder:
     async def save_modified_summary(
         self,
         modified_content: str,
+        action_by: UUID,
         summary_sk: int | None = None,
         summary_id: UUID | None = None,
     ):
@@ -246,6 +271,9 @@ class SummaryBuilder:
             meta_data=old_record.meta_data,
             effective_from=datetime.now(timezone.utc),
             effective_to=None,
+            created_by=old_record.created_by,
+            created_date=old_record.created_date,
+            modified_by=action_by,
         )
 
         inserted = await self.summary_accessor.insert(summary, self.session)

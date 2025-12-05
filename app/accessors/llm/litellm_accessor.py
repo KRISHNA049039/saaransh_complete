@@ -10,29 +10,23 @@ for key in logging.Logger.manager.loggerDict.keys():
     if "litellm" in key.lower():
         logging.getLogger(key).setLevel(logging.CRITICAL)
 
-from app.tools.registry import TOOL_REGISTRY, TOOL_DEFINITIONS
-from app.accessors.llm.llm_accessor import LLMAccessor
-
 logger = logging.getLogger(__name__)
 
-class LiteLLMAccessor(LLMAccessor):
-    def __init__(self):
-        self.tools = TOOL_DEFINITIONS
 
+class LiteLLMAccessor:
     async def _build_messages(self, content: str, user_prompt: str, system_prompt: str):
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
 
         final_content = (
-            f"user_instructions: {user_prompt}\n\n{content}"
-            if user_prompt else content
+            f"user_instructions: {user_prompt}\n\n{content}" if user_prompt else content
         )
 
         messages.append({"role": "user", "content": final_content})
         return messages
 
-    async def _run_tools(self, response_message):
+    async def _run_tools(self, response_message, tool_registry):
         tool_calls = response_message.tool_calls or []
         if not tool_calls:
             return []
@@ -49,8 +43,9 @@ class LiteLLMAccessor(LLMAccessor):
 
             logger.debug(f"Running tool: {fn_name} with args: {args}")
 
-            if fn_name in TOOL_REGISTRY:
-                tasks.append(TOOL_REGISTRY[fn_name](**args))
+            if fn_name in tool_registry:
+                fn = tool_registry[fn_name]
+                tasks.append(fn(**args))
             else:
                 tasks.append(
                     asyncio.create_task(
@@ -72,34 +67,33 @@ class LiteLLMAccessor(LLMAccessor):
         user_prompt: str,
         system_prompt: str,
         use_tools: bool = False,
-    ) -> str:
-        """
-        use_tools=True for tool calling workflow.
-        """
+        tool_schemas=None,
+        tool_registry=None,
+    ):
         try:
             logger.debug(f"--- Using model: {model} (tools={use_tools}) ---")
+
             messages = await self._build_messages(content, user_prompt, system_prompt)
 
             # Initial request
             response = await acompletion(
                 model=model,
                 messages=messages,
-                tools=self.tools if use_tools else None,
+                tools=tool_schemas if use_tools else None,
                 tool_choice="auto" if use_tools else None,
             )
 
             response_message = response.choices[0].message
 
-            # If tools disabled
             if not use_tools or not response_message.tool_calls:
                 return response_message.content
 
-            # Execute the tools
-            tool_messages = await self._run_tools(response_message)
+            # Execute tool calls
+            tool_msgs = await self._run_tools(response_message, tool_registry)
             messages.append(response_message)
-            messages.extend(tool_messages)
+            messages.extend(tool_msgs)
 
-            # Second request
+            # Final response after tool results
             final_response = await acompletion(model=model, messages=messages)
             return final_response.choices[0].message.content
 
