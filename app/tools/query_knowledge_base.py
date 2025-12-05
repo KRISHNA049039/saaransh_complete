@@ -65,7 +65,7 @@ tool_query_knowledge_base_definition = {
                 "query": {"type": "string"},
                 "top_k": {"type": "integer"},
             },
-            "required": ["query", "summary_id"],
+            "required": ["query"],
         },
     },
 }
