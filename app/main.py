@@ -8,6 +8,7 @@ from app.config.logging import setup_logging
 from app.config.security.resource_server import require_auth
 from app.handlers.comments_handler import router as comments_router
 from app.handlers.summaries_handler import router as summaries_router
+from app.handlers.user_prompts_handler import router as user_prompts_router
 from app.handlers.auth_test_handler import router as auth_test_router
 from app.handlers.kc_test_handler import router as kc_test_router
 from app.handlers.users_handler import router as users_router
@@ -50,6 +51,7 @@ protected_router = APIRouter(
 protected_router.include_router(comments_router)
 protected_router.include_router(summaries_router)
 protected_router.include_router(users_router)
+protected_router.include_router(user_prompts_router)
 
 test_router = APIRouter(
     prefix="/api/v1/test",

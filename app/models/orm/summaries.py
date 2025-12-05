@@ -45,4 +45,8 @@ class Summary(Base):
     effective_from: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     effective_to: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
-    entity_type_id: Mapped[Optional[int]] = mapped_column(BigInteger)
+    entity_type_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
+        default=1,
+        nullable=False
+        )

@@ -30,7 +30,11 @@ class User(Base):
     )
     is_admin: Mapped[Optional[bool]] = mapped_column(Boolean)
 
-    entity_type_id: Mapped[Optional[int]] = mapped_column(BigInteger)
+    entity_type_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
+        default=0,
+        nullable=False
+        )
 
     created_by: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
 
