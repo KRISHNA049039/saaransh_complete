@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.accessors.content_embeddings_accessor import ContentEmbeddingsAccessor
@@ -15,6 +16,7 @@ class ContentEmbeddingsBuilder:
     def __init__(self):
         self.embedding_accessor = ContentEmbeddingsAccessor()
         self.embedding_model = EmbeddingModel()
+
     def chunk_task_data(self, user_data: UserData) -> List[str]:
         chunks = []
         for i, task in enumerate(user_data.tasks, 1):
@@ -27,20 +29,24 @@ class ContentEmbeddingsBuilder:
             if task.comments:
                 comments_text = (
                     f"Task {i} - {task.title} Description: {task.description}\nComments:\n"
-                    + "\n".join([
-                        f"- ({idx+1}) {comment.text}"
-                        for idx, comment in enumerate(task.comments)
-                    ])
+                    + "\n".join(
+                        [
+                            f"- ({idx+1}) {comment.text}"
+                            for idx, comment in enumerate(task.comments)
+                        ]
+                    )
                 )
                 chunks.append(comments_text)
 
             if task.logs:
                 logs_text = (
                     f"Task {i} - {task.title} Description: {task.description}\nActivity Logs:\n"
-                    + "\n".join([
-                        f"- ({idx+1}) {log.content}"
-                        for idx, log in enumerate(task.logs)
-                    ])
+                    + "\n".join(
+                        [
+                            f"- ({idx+1}) {log.content}"
+                            for idx, log in enumerate(task.logs)
+                        ]
+                    )
                 )
                 chunks.append(logs_text)
 
@@ -53,10 +59,7 @@ class ContentEmbeddingsBuilder:
         return embeddings
 
     async def process_and_store_embeddings(
-        self,
-        summary_id: str | None,
-        content: UserData,
-        session: AsyncSession
+        self, summary_id: UUID | None, content: UserData, session: AsyncSession
     ) -> List[ContentEmbedding]:
 
         chunks = self.chunk_task_data(content)
@@ -74,7 +77,7 @@ class ContentEmbeddingsBuilder:
                 chunk_index=idx,
                 content=chunk_text,
                 embedding=emb,
-                is_active=True
+                is_active=True,
             )
             inserted = await self.embedding_accessor.insert(record, session)
             results.append(inserted)
