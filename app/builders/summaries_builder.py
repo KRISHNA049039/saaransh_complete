@@ -91,6 +91,7 @@ class SummaryBuilder:
                 start_date=None,
                 end_date=None,
                 meta_data={"model": model_name},
+                status_id=0,
                 effective_from=datetime.now(timezone.utc),
                 effective_to=None,
                 created_by=action_by,
@@ -109,7 +110,7 @@ class SummaryBuilder:
     ):
         try:
             model_name = request.model or settings.DEFAULT_LLM_MODEL
-            db_response = None
+            existing_record = None
             if request.summary_sk is None and request.summary_id is None:
                 raise ValueError("Either summary_sk or summary_id must be provided.")
 
@@ -121,12 +122,12 @@ class SummaryBuilder:
             result = await self.summary_accessor.fetch(
                 session=self.session, filters=filters, sort=None
             )
-            db_response = result[0] if result else None
+            existing_record = result[0] if result else None
 
-            if not db_response:
+            if not existing_record:
                 raise ValueError("No summary found for given summary_sk/summary_id.")
 
-            intermediate_summary = db_response.content or ""
+            intermediate_summary = existing_record.content or ""
 
             response = await self.llm_accessor.get_response(
                 model_name,
@@ -135,14 +136,13 @@ class SummaryBuilder:
                 prompts_template.SUMMARY_PROMPT,
             )
 
-            summary_id = uuid.uuid4()
-
             summary = Summary(
-                summary_id=summary_id,
+                summary_id=request.summary_id,
                 content=response,
-                start_date=None,
-                end_date=None,
+                start_date=existing_record.start_date,
+                end_date=existing_record.end_date,
                 meta_data={"model": model_name},
+                status_id=1,
                 effective_from=datetime.now(timezone.utc),
                 effective_to=None,
             )
@@ -150,8 +150,8 @@ class SummaryBuilder:
             inserted = await self.summary_accessor.insert(summary, self.session)
 
             logger.debug(
-                f"Final summary created from staging summary_sk={request.summary_sk}, "
-                f"summary_id={summary_id}"
+                f"Final summary created from staging summary_sk={inserted.summary_sk}, "
+                f"summary_id={inserted.summary_id}"
             )
 
             return inserted
@@ -225,6 +225,7 @@ class SummaryBuilder:
             start_date=existing_record.start_date,
             end_date=existing_record.end_date,
             meta_data={"model": model_name},
+            status_id=existing_record.status_id,
             effective_from=datetime.now(timezone.utc),
             effective_to=None,
             created_by=existing_record.created_by,
@@ -269,6 +270,7 @@ class SummaryBuilder:
             start_date=old_record.start_date,
             end_date=old_record.end_date,
             meta_data=old_record.meta_data,
+            status_id=old_record.status_id,
             effective_from=datetime.now(timezone.utc),
             effective_to=None,
             created_by=old_record.created_by,
