@@ -8,6 +8,7 @@ from app.config.logging import setup_logging
 from app.config.security.resource_server import require_auth
 from app.handlers.comments_handler import router as comments_router
 from app.handlers.summaries_handler import router as summaries_router
+from app.handlers.summaries_users_handler import router as share_router
 from app.handlers.user_prompts_handler import router as user_prompts_router
 from app.handlers.auth_test_handler import router as auth_test_router
 from app.handlers.kc_test_handler import router as kc_test_router
@@ -31,7 +32,7 @@ app = FastAPI(
     description="Backend service for Saaransh application",
     version="1.0.0",
     lifespan=lifespan,
-    )
+)
 
 origins = settings.CORS_ORIGINS
 
@@ -41,28 +42,24 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    )
+)
 
-protected_router = APIRouter(
-    prefix="/api/v1",
-    dependencies=[Depends(require_auth)]
-    )
+protected_router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_auth)])
 
 protected_router.include_router(comments_router)
 protected_router.include_router(summaries_router)
 protected_router.include_router(users_router)
 protected_router.include_router(user_prompts_router)
+protected_router.include_router(share_router)
 
-test_router = APIRouter(
-    prefix="/api/v1/test",
-    dependencies=[Depends(require_auth)]
-    )
+test_router = APIRouter(prefix="/api/v1/test", dependencies=[Depends(require_auth)])
 
 test_router.include_router(auth_test_router)
 test_router.include_router(kc_test_router)
 
 app.include_router(protected_router)
 app.include_router(test_router)
+
 
 @app.get("/")
 def read_root():

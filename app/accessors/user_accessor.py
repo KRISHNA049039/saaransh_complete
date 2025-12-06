@@ -1,3 +1,4 @@
+from typing import Optional, Sequence
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
@@ -45,5 +46,23 @@ class UserAccessor(BaseDBAccessor[User]):
         query = select(User).where(
             User.user_name == username, User.effective_to.is_(None)
         )
+        result = await session.execute(query)
+        return result.scalars().first()
+
+    async def get_by_user_id(
+        self,
+        session: AsyncSession,
+        user_id: UUID,
+        *,
+        effective_only: bool = True,
+        is_active: bool = True,
+    ) -> Optional[User]:
+        query = select(User).where(User.user_id == user_id)
+
+        if effective_only:
+            query = query.where(User.effective_to.is_(None))
+        if is_active:
+            query = query.where(User.is_active.is_(True))
+
         result = await session.execute(query)
         return result.scalars().first()

@@ -19,7 +19,7 @@ class SummaryFetchFilter(SCD2Filter):
 
 class SummaryCreateRequest(BaseModel):
     model: Optional[str] = None
-    summary_id: Optional[UUID4] = None
+    summary_id: UUID4
     summary_sk: Optional[int] = None
     user_prompt: Optional[str] = None
 

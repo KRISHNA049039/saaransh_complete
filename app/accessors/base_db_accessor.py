@@ -1,5 +1,5 @@
 from typing import Type, TypeVar, Generic, Optional, cast
-from sqlalchemy import select, asc, desc, nullsfirst, nullslast
+from sqlalchemy import exists, select, asc, desc, nullsfirst, nullslast
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
@@ -9,6 +9,7 @@ from app.utils.scd2_protocol import SCD2Model
 from app.utils.scd2_protocol import SCD2Filter
 
 ModelType = TypeVar("ModelType", bound=Base)
+
 
 class BaseDBAccessor(Generic[ModelType]):
     model: Type[ModelType]
@@ -21,15 +22,15 @@ class BaseDBAccessor(Generic[ModelType]):
     ):
         query = select(self.model)
 
-        #scd2 table check
+        # scd2 table check
         if getattr(self.model, "__scd2__", False):
 
             scd2_model = cast(SCD2Model, self.model)
             scd2_filter = cast(SCD2Filter, filters)
 
             if scd2_filter.effective_only:
-                query = query.where(scd2_model.effective_to.is_(None)) 
-        
+                query = query.where(scd2_model.effective_to.is_(None))
+
         # Filtering
         if filters:
             for key, value in filters.model_dump(exclude_none=True).items():
@@ -46,7 +47,11 @@ class BaseDBAccessor(Generic[ModelType]):
                     continue
 
                 column = getattr(self.model, rule.field)
-                order = desc(column) if rule.direction == SortDirection.DESC else asc(column)
+                order = (
+                    desc(column)
+                    if rule.direction == SortDirection.DESC
+                    else asc(column)
+                )
 
                 if rule.nulls == NullsPosition.FIRST:
                     order = nullsfirst(order)

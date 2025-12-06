@@ -2,8 +2,6 @@ from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
-from torch import Value
-
 from app.models.orm.comments import Comment
 from app.models.request.comments_request import (
     CommentCreateRequest,
