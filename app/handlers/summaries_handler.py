@@ -72,7 +72,7 @@ async def fetch_summaries(
     return await builder.build_summaries_fetch(filters, sort_query)
 
 
-@router.put("/save", response_model=list[SummaryResponse])
+@router.put("/save", response_model=SummaryResponse)
 async def save_modified_summary(
     request: SummarySaveRequest,
     session: AsyncSession = Depends(get_session),

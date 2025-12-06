@@ -15,6 +15,7 @@ class SummaryFetchFilter(SCD2Filter):
     summary_sk: Optional[int] = None
     summary_id: Optional[UUID4] = None
     is_active: Optional[bool] = None
+    status_id: Optional[int] = None
 
 
 class SummaryCreateRequest(BaseModel):

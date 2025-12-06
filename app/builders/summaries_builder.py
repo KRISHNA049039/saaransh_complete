@@ -220,13 +220,18 @@ class SummaryBuilder:
             session=self.session,
         )
 
+        if staging:
+            status = SummaryStatus.STAGING
+        else:
+            status = SummaryStatus.IN_PROGRESS
+
         new_summary = Summary(
             summary_id=summary_id,
             content=response,
             start_date=existing_record.start_date,
             end_date=existing_record.end_date,
             meta_data={"model": model_name},
-            status_id=existing_record.status_id,
+            status_id=status,
             effective_from=datetime.now(timezone.utc),
             effective_to=None,
             created_by=existing_record.created_by,
