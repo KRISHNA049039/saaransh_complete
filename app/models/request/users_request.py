@@ -10,6 +10,7 @@ class UserCreateRequest(BaseModel):
     last_name: Optional[str] = None
     is_active: bool = True
     is_admin: bool = False
+    external_user_id: Optional[UUID] = None
 
 
 class UserEditRequest(BaseModel):
@@ -18,6 +19,7 @@ class UserEditRequest(BaseModel):
     last_name: Optional[str] = None
     is_active: bool = True
     is_admin: bool = False
+    external_user_id: Optional[UUID] = None
 
 
 class UserFetchFilter(SCD2Filter):
@@ -27,6 +29,7 @@ class UserFetchFilter(SCD2Filter):
     user_email: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    external_user_id: Optional[UUID] = None
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
     created_by: Optional[UUID] = None

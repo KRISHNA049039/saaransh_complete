@@ -31,7 +31,10 @@ async def create_users(
     )
 
     if not response.success:
-        return JSONResponse(status_code=400, content=response.model_dump())
+        return JSONResponse(
+            status_code=400,
+            content=response.model_dump(mode="json"),
+        )
 
     return response
 

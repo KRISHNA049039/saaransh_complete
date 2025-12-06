@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
 
+
 class UserResponse(BaseModel):
     user_sk: int | None = None
     user_id: UUID | None = None
@@ -15,9 +16,10 @@ class UserResponse(BaseModel):
     effective_to: datetime | None = None
     created_by: UUID | None = None
     created_date: datetime | None = None
+    external_user_id: UUID | None = None
     error: str | None = None
 
-    model_config = { "from_attributes": True }
+    model_config = {"from_attributes": True}
 
 
 class BulkUserCreateResponse(BaseModel):
