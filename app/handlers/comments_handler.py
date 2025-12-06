@@ -43,7 +43,6 @@ async def fetch_comments(
     filters: CommentFetchFilter = Depends(),
     sort_query: SortQuery = Depends(parse_sort_query),
     session: AsyncSession = Depends(get_session),
-    context: SecurityContext = Depends(get_security_context),
 ):
     DEFAULT_SORT = sort_by("-created_date")
     if not sort_query.sorts:

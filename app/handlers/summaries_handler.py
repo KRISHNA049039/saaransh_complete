@@ -21,7 +21,7 @@ from app.models.request.summaries_request import (
 from app.models.request.summaries_users_request import SummariesUsersCreateRequest
 from app.models.request.user_prompts_request import UserPromptsCreateRequest
 from app.models.response.summaries_response import SummaryResponse
-from app.models.constants import SummaryUserRoleId
+from app.models.constants import Roles
 from app.utils.sort_util import SortQuery, parse_sort_query, sort_by
 
 router = APIRouter(prefix="/summaries", tags=["summaries"])
@@ -41,7 +41,7 @@ async def create_staging_summary(
     role_request = SummariesUsersCreateRequest(
         summary_id=response.summary_id,
         user_id=requested_by,
-        role_id=SummaryUserRoleId.OWNER,
+        role_id=Roles.OWNER,
     )
     await summaries_users_builders.build_create(role_request, requested_by)
 

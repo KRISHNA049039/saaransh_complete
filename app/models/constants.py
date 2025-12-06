@@ -1,4 +1,4 @@
-class SummaryUserRoleId:
+class Roles:
     OWNER = 0
     EDITOR = 1
     VIEWER = 2
