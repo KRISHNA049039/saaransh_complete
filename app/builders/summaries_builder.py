@@ -9,6 +9,7 @@ from app.accessors.llm.llm_accessor import LLMAccessor
 from app.accessors.llm.llm_factory import get_llm_accessor
 from app.accessors.summaries_accessor import SummaryAccessor
 from app.builders.content_embeddings_builder import ContentEmbeddingsBuilder
+from app.models.constants import SummaryStatus
 from app.models.orm.summaries import Summary
 from app.models.request.summaries_request import (
     StagingCreateRequest,
@@ -91,7 +92,7 @@ class SummaryBuilder:
                 start_date=None,
                 end_date=None,
                 meta_data={"model": model_name},
-                status_id=0,
+                status_id=SummaryStatus.STAGING,
                 effective_from=datetime.now(timezone.utc),
                 effective_to=None,
                 created_by=action_by,
@@ -142,7 +143,7 @@ class SummaryBuilder:
                 start_date=existing_record.start_date,
                 end_date=existing_record.end_date,
                 meta_data={"model": model_name},
-                status_id=1,
+                status_id=SummaryStatus.IN_PROGRESS,
                 effective_from=datetime.now(timezone.utc),
                 effective_to=None,
             )

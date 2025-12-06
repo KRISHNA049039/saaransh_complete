@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.accessors.llm.llm_accessor import LLMAccessor
 from app.accessors.llm.llm_factory import get_llm_accessor
 from app.builders.summaries_builder import SummaryBuilder
+from app.builders.summaries_users_builder import SummariesUsersBuilder
 from app.builders.user_prompts_builder import UserPromptBuilder
 from app.config.database import get_session
 from app.config.security.resource_server import get_security_context
@@ -17,8 +18,10 @@ from app.models.request.summaries_request import (
     SummarySaveRequest,
     SummaryFetchFilter,
 )
+from app.models.request.summaries_users_request import SummariesUsersCreateRequest
 from app.models.request.user_prompts_request import UserPromptsCreateRequest
 from app.models.response.summaries_response import SummaryResponse
+from app.models.constants import SummaryUserRoleId
 from app.utils.sort_util import SortQuery, parse_sort_query, sort_by
 
 router = APIRouter(prefix="/summaries", tags=["summaries"])
@@ -31,8 +34,18 @@ async def create_staging_summary(
     llm_accessor: LLMAccessor = Depends(get_llm_accessor),
     context: SecurityContext = Depends(get_security_context),
 ):
-    builder = SummaryBuilder(session=session, llm_accessor=llm_accessor)
-    return await builder.build_staging_summary(request, context.user_id)
+    requested_by = context.user_id
+    summaries_builder = SummaryBuilder(session=session, llm_accessor=llm_accessor)
+    response = await summaries_builder.build_staging_summary(request, requested_by)
+    summaries_users_builders = SummariesUsersBuilder(session)
+    role_request = SummariesUsersCreateRequest(
+        summary_id=response.summary_id,
+        user_id=requested_by,
+        role_id=SummaryUserRoleId.OWNER,
+    )
+    await summaries_users_builders.build_create(role_request, requested_by)
+
+    return response
 
 
 @router.post("/final", response_model=SummaryResponse)
