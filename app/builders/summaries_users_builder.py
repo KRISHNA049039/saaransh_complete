@@ -11,6 +11,7 @@ from app.models.request.summaries_users_request import (
 from app.accessors.summaries_users_accessor import SummariesUsersAccessor
 from app.accessors.summaries_accessor import SummaryAccessor
 from app.accessors.user_accessor import UserAccessor
+from app.models.response.summaries_users_response import SummariesUsersFullResponse
 from app.utils.sort_util import SortQuery
 
 logger = logging.getLogger(__name__)
@@ -80,6 +81,35 @@ class SummariesUsersBuilder:
             return await self.accessor.fetch(
                 session=self.session, filters=filters, sort=sort
             )
+        except Exception as exc:
+            logger.error(f"Failed to fetch summaries_users: {exc}", exc_info=True)
+            raise
+
+    async def build_expanded_fetch(
+        self, filters: SummariesUsersFetchFilter, sort: SortQuery
+    ) -> list[SummariesUsersFullResponse]:
+        logger.debug(
+            f"Fetching expanded summaries_users with filters={filters} sort={sort}"
+        )
+        try:
+            results = await self.accessor.get_expanded(self.session, filters, sort)
+            output = []
+
+            for su, user, summary in results:
+                output.append(
+                    SummariesUsersFullResponse(
+                        summaries_users_sk=su.summaries_users_sk,
+                        role_id=su.role_id,
+                        reviewed=su.reviewed,
+                        is_active=su.is_active,
+                        created_by=su.created_by,
+                        created_date=su.created_date,
+                        user=user,
+                        summary=summary,
+                    )
+                )
+
+            return output
         except Exception as exc:
             logger.error(f"Failed to fetch summaries_users: {exc}", exc_info=True)
             raise

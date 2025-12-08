@@ -1,10 +1,14 @@
 from typing import Optional
 from uuid import UUID
+
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.accessors.base_db_accessor import BaseDBAccessor
+from app.models.orm.summaries import Summary
 from app.models.orm.summaries_users import SummariesUsers
 from sqlalchemy import select
+from sqlalchemy.orm import aliased
+from app.models.orm.users import User
 
 
 class SummariesUsersAccessor(BaseDBAccessor[SummariesUsers]):
@@ -40,3 +44,23 @@ class SummariesUsersAccessor(BaseDBAccessor[SummariesUsers]):
 
         result = await session.execute(query)
         return result.scalar_one_or_none()
+
+    async def get_expanded(self, session, filters, sort):
+        query = (
+            select(SummariesUsers, User, Summary)
+            .join(
+                User,
+                (User.user_id == SummariesUsers.user_id)
+                & (User.effective_to.is_(None)),
+            )
+            .join(
+                Summary,
+                (Summary.summary_id == SummariesUsers.summary_id)
+                & (Summary.effective_to.is_(None)),
+            )
+        )
+
+        query = self.apply_filters_and_sort(query, filters, sort)
+
+        result = await session.execute(query)
+        return result.unique().all()

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.accessors.summaries_users_accessor import SummariesUsersAccessor
 from app.builders.summaries_users_builder import SummariesUsersBuilder
 from app.config.security.resource_server import get_security_context
 from app.config.security.security_context import SecurityContext
@@ -11,7 +12,10 @@ from app.models.request.summaries_users_request import (
     SummariesUsersFetchFilter,
 )
 
-from app.models.response.summaries_users_response import SummariesUsersResponse
+from app.models.response.summaries_users_response import (
+    SummariesUsersFullResponse,
+    SummariesUsersResponse,
+)
 from app.utils.sort_util import SortQuery, parse_sort_query, sort_by
 
 
@@ -29,7 +33,7 @@ async def create_summaries_user(
     return summaries_user
 
 
-@router.get("", response_model=list[SummariesUsersResponse])
+@router.get("/minimal", response_model=list[SummariesUsersResponse])
 async def fetch_summaries_users(
     filters: SummariesUsersFetchFilter = Depends(),
     sort_query: SortQuery = Depends(parse_sort_query),
@@ -41,3 +45,17 @@ async def fetch_summaries_users(
 
     builder = SummariesUsersBuilder(session)
     return await builder.build_fetch(filters, sort_query)
+
+
+@router.get("", response_model=list[SummariesUsersFullResponse])
+async def fetch_share(
+    filters: SummariesUsersFetchFilter = Depends(),
+    sort_query: SortQuery = Depends(parse_sort_query),
+    session: AsyncSession = Depends(get_session),
+):
+    DEFAULT_SORT = sort_by("-created_date")
+    if not sort_query.sorts:
+        sort_query = DEFAULT_SORT
+
+    builder = SummariesUsersBuilder(session)
+    return await builder.build_expanded_fetch(filters, sort_query)
