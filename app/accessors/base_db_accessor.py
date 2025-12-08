@@ -21,37 +21,53 @@ class BaseDBAccessor(Generic[ModelType]):
         sort: Optional[SortQuery] = None,
     ):
         query = select(self.model)
+        query = self.apply_filters_and_sort(query, filters, sort)
 
-        # scd2 table check
+        result = await session.execute(query)
+        return result.scalars().all()
+
+    def apply_filters_and_sort(
+        self,
+        query,
+        filters: Optional[BaseModel],
+        sort: Optional[SortQuery],
+    ):
+        query = self._apply_scd2_filter(query, filters)
+        query = self._apply_filters(query, filters)
+        query = self._apply_sort(query, sort)
+        return query
+
+    def _apply_scd2_filter(self, query, filters):
         if getattr(self.model, "__scd2__", False):
+            if filters and getattr(filters, "effective_only", True):
+                eff_to = getattr(self.model, "effective_to", None)
+                if eff_to is not None:
+                    query = query.where(eff_to.is_(None))
 
-            scd2_model = cast(SCD2Model, self.model)
-            scd2_filter = cast(SCD2Filter, filters)
+        return query
 
-            if scd2_filter.effective_only:
-                query = query.where(scd2_model.effective_to.is_(None))
+    def _apply_filters(self, query, filters):
+        if not filters:
+            return query
 
-        # Filtering
-        if filters:
-            for key, value in filters.model_dump(exclude_none=True).items():
-                if key == "active_only":
-                    continue
-                if hasattr(self.model, key):
-                    query = query.where(getattr(self.model, key) == value)
+        for key, value in filters.model_dump(exclude_none=True).items():
+            if key == "effective_only":
+                continue
 
-        # Sorting
-        if sort and sort.sorts:
-            orders = []
-            for rule in sort.sorts:
-                if not hasattr(self.model, rule.field):
-                    continue
+            if hasattr(self.model, key):
+                query = query.where(getattr(self.model, key) == value)
 
-                column = getattr(self.model, rule.field)
-                order = (
-                    desc(column)
-                    if rule.direction == SortDirection.DESC
-                    else asc(column)
-                )
+        return query
+
+    def _apply_sort(self, query, sort):
+        if not sort or not sort.sorts:
+            return query
+
+        orders = []
+        for rule in sort.sorts:
+            if hasattr(self.model, rule.field):
+                col = getattr(self.model, rule.field)
+                order = desc(col) if rule.direction == SortDirection.DESC else asc(col)
 
                 if rule.nulls == NullsPosition.FIRST:
                     order = nullsfirst(order)
@@ -60,8 +76,7 @@ class BaseDBAccessor(Generic[ModelType]):
 
                 orders.append(order)
 
-            if orders:
-                query = query.order_by(*orders)
+        if orders:
+            query = query.order_by(*orders)
 
-        result = await session.execute(query)
-        return result.scalars().all()
+        return query
