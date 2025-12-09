@@ -1,6 +1,4 @@
-from typing import Optional
 from fastapi import APIRouter, Depends
-from pydantic import UUID4, BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.accessors.llm.llm_accessor import LLMAccessor

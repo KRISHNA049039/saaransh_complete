@@ -24,8 +24,6 @@ class User(Base):
     user_email: Mapped[Optional[str]] = mapped_column(String)
     first_name: Mapped[Optional[str]] = mapped_column(String)
     last_name: Mapped[Optional[str]] = mapped_column(String)
-    external_user_id: Mapped[Optional[UUID]] = mapped_column(PG_UUID(as_uuid=True))
-
     is_active: Mapped[bool] = mapped_column(
         Boolean, server_default=text("true"), nullable=False
     )

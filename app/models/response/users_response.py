@@ -16,7 +16,6 @@ class UserResponse(BaseModel):
     effective_to: datetime | None = None
     created_by: UUID | None = None
     created_date: datetime | None = None
-    external_user_id: UUID | None = None
     error: str | None = None
 
     model_config = {"from_attributes": True}

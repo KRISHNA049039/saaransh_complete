@@ -55,7 +55,6 @@ class UserBuilder:
                     user_email=request.user_email,
                     first_name=request.first_name,
                     last_name=request.last_name,
-                    external_user_id=request.external_user_id,
                     is_admin=request.is_admin,
                     is_active=request.is_active,
                     effective_from=datetime.now(timezone.utc),
@@ -88,7 +87,6 @@ class UserBuilder:
                         user_email=request.user_email,
                         first_name=request.first_name,
                         last_name=request.last_name,
-                        external_user_id=request.external_user_id,
                         is_admin=request.is_admin,
                         error=str(e),
                     )
@@ -159,7 +157,6 @@ class UserBuilder:
                 ),
                 is_admin=request.is_admin,
                 is_active=request.is_active,
-                external_user_id=request.external_user_id,
                 effective_from=datetime.now(timezone.utc),
                 created_by=existing_record.created_by,
                 modified_by=created_by,
