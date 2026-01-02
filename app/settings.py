@@ -33,6 +33,8 @@ class Settings:
         self.DB_URL: str = os.getenv("DB_URL", "")
         self.DB_SCHEMA: str = os.getenv("DB_SCHEMA", "")
         self.DB_DEBUG: bool = os.getenv("DB_DEBUG", "false").lower() == "true"
+        print("DB_POOL_SIZE from env:", repr(os.getenv("DB_POOL_SIZE")))
+
         self.DB_POOL_SIZE: int = int(os.getenv("DB_POOL_SIZE", ""))
         self.DB_MAX_OVERFLOW: int = int(os.getenv("DB_MAX_OVERFLOW", ""))
 

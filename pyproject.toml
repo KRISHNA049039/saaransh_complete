@@ -15,5 +15,6 @@ dependencies = [
     "pgvector",
     "asyncpg",
     "authlib",
-    "joserfc"
+    "joserfc",
+    "asana>=5.2.2",
 ]
