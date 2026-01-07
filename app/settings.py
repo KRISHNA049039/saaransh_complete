@@ -68,5 +68,24 @@ class Settings:
             "KC_SAARANSH_ADMIN_ROLE", "SAARANSH_ADMIN"
         )
 
+        # Asana Integration Configuration
+        self.ASANA_ACCESS_TOKEN: str = os.getenv("ASANA_ACCESS_TOKEN", "")
+        
+        # Asana OAuth Configuration
+        self.ASANA_CLIENT_ID: str = os.getenv("ASANA_CLIENT_ID", "")
+        self.ASANA_CLIENT_SECRET: str = os.getenv("ASANA_CLIENT_SECRET", "")
+        self.ASANA_REDIRECT_URI: str = os.getenv("ASANA_REDIRECT_URI", "http://localhost:8000/api/v1/auth/asana/callback")
+        self.ASANA_OAUTH_SCOPES: str = os.getenv("ASANA_OAUTH_SCOPES", "default")
+        
+        # Authentication Configuration
+        self.JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+        self.JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+        self.JWT_EXPIRATION_HOURS: int = int(os.getenv("JWT_EXPIRATION_HOURS", "24"))
+        
+        # Session Configuration
+        self.SESSION_SECRET_KEY: str = os.getenv("SESSION_SECRET_KEY", "your-session-secret-change-in-production")
+        self.SESSION_COOKIE_NAME: str = os.getenv("SESSION_COOKIE_NAME", "saaransh_session")
+        self.SESSION_EXPIRE_SECONDS: int = int(os.getenv("SESSION_EXPIRE_SECONDS", "86400"))  # 24 hours
+
 
 settings = Settings()

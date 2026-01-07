@@ -13,6 +13,7 @@ from app.handlers.user_prompts_handler import router as user_prompts_router
 from app.handlers.auth_test_handler import router as auth_test_router
 from app.handlers.kc_test_handler import router as kc_test_router
 from app.handlers.users_handler import router as users_router
+from app.handlers.llm_handler import router as llm_router
 from app.settings import settings
 from app.accessors.asana_integration_controllers import router as integration_router
 
@@ -55,6 +56,7 @@ protected_router.include_router(users_router)
 protected_router.include_router(user_prompts_router)
 protected_router.include_router(share_router)
 protected_router.include_router(integration_router)
+protected_router.include_router(llm_router)
 
 test_router = APIRouter(prefix="/api/v1/test")  # Removed: dependencies=[Depends(require_auth)]
 

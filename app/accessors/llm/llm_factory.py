@@ -8,6 +8,38 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class LLMFactory:
+    """Factory class for creating LLM accessor instances"""
+    
+    @staticmethod
+    def get_llm_accessor(llm_sdk: Optional[str] = None) -> LLMAccessor:
+        """
+        Factory method to get appropriate LLM accessor based on configuration
+        
+        Args:
+            llm_sdk: Override for LLM SDK (optional, uses settings if not provided)
+            
+        Returns:
+            Configured LLM accessor instance
+        """
+        
+        llm_sdk = llm_sdk or settings.LLM_SDK.strip().lower() or "litellm"
+        
+        logger.info(f"Creating LLM accessor for SDK: {llm_sdk}")
+
+        if llm_sdk == "litellm":
+            logger.info("Using LiteLLM accessor (remote)")
+            return LiteLLMAccessor()
+        
+        elif llm_sdk == "local_llama":
+            logger.info("Using Local Llama accessor")
+            return LocalLlamaAccessor()
+        
+        else:
+            logger.error(f"Unknown LLM SDK: {llm_sdk}")
+            raise ValueError(f"Unknown LLM sdk: {llm_sdk}")
+
+
 def get_llm_accessor(llm_sdk: Optional[str] = None) -> LLMAccessor:
     """
     Factory function to get appropriate LLM accessor based on configuration
