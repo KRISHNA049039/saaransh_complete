@@ -17,4 +17,5 @@ dependencies = [
     "authlib",
     "joserfc",
     "asana>=5.2.2",
+    "httpx>=0.24.0",
 ]

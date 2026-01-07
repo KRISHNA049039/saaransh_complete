@@ -1,0 +1,67 @@
+{
+  "user_prompt": "Create a concise executive summary of this project status",
+  "user_data": {
+    "employee": {
+      "name": "John Doe",
+      "role": "Project Manager"
+    },
+    "tasks": [
+      {
+        "title": "User Authentication Module",
+        "description": "Completed user authentication system with OAuth integration",
+        "comments": [
+          {
+            "text": "Authentication module completed successfully"
+          }
+        ],
+        "logs": [
+          {
+            "content": "Module deployed to staging environment"
+          }
+        ]
+      },
+      {
+        "title": "Database Schema Updates",
+        "description": "Updated database schema to support new user roles",
+        "comments": [
+          {
+            "text": "Schema migration completed without issues"
+          }
+        ],
+        "logs": [
+          {
+            "content": "Database updated successfully"
+          }
+        ]
+      },
+      {
+        "title": "API Integration",
+        "description": "Integrate with third-party payment service API",
+        "comments": [
+          {
+            "text": "Facing delays due to third-party service limitations"
+          }
+        ],
+        "logs": [
+          {
+            "content": "API integration in progress - 60% complete"
+          }
+        ]
+      },
+      {
+        "title": "Frontend Components",
+        "description": "Develop responsive UI components for user dashboard",
+        "comments": [
+          {
+            "text": "3 new components completed this week"
+          }
+        ],
+        "logs": [
+          {
+            "content": "Frontend development progressing well"
+          }
+        ]
+      }
+    ]
+  }
+}

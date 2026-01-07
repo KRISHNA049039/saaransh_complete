@@ -27,6 +27,16 @@ class Settings:
             "DEFAULT_LLM_MODEL", "gemini/gemini-2.5-flash"
         )
 
+        # Local LLM Configuration
+        self.LOCAL_LLM_ENABLED: bool = os.getenv("LOCAL_LLM_ENABLED", "false").lower() == "true"
+        self.LOCAL_LLM_HOST: str = os.getenv("LOCAL_LLM_HOST", "localhost")
+        self.LOCAL_LLM_PORT: int = int(os.getenv("LOCAL_LLM_PORT", "11434"))
+        self.LOCAL_LLM_MODEL: str = os.getenv("LOCAL_LLM_MODEL", "llama3.1:8b")
+        self.LOCAL_LLM_TIMEOUT: int = int(os.getenv("LOCAL_LLM_TIMEOUT", "60"))
+        self.LOCAL_LLM_TEMPERATURE: float = float(os.getenv("LOCAL_LLM_TEMPERATURE", "0.7"))
+        self.LOCAL_LLM_CONTEXT_LENGTH: int = int(os.getenv("LOCAL_LLM_CONTEXT_LENGTH", "8192"))
+        self.LOCAL_LLM_MAX_TOKENS: int = int(os.getenv("LOCAL_LLM_MAX_TOKENS", "4096"))
+
         self.SERVER_HOST: str = os.getenv("SERVER_HOST", "127.0.0.1")
         self.SERVER_PORT: int = int(os.getenv("SERVER_PORT", "8000"))
 
