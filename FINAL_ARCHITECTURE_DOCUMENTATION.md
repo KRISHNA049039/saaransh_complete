@@ -760,3 +760,146 @@ async def health_check():
 ```
 
 This comprehensive architecture documentation provides the complete blueprint for understanding, extending, and deploying the Saaransh backend system in production environments.
+---
+
+
+## 🆕 **Latest Update: Dynamic Model Selection Architecture**
+
+### **New Components Added (Latest Session)**
+
+#### **1. LLM Service Layer**
+```python
+# app/services/llm_service.py
+class LLMService:
+    """Centralized model management and dynamic selection"""
+    
+    async def get_available_models() -> List[ModelInfo]
+    async def get_model_info(model_id: str) -> ModelInfo
+    async def create_llm_accessor(model_id: str) -> LLMAccessor
+    async def generate_response(model_id, content, prompt) -> str
+    async def benchmark_model(model_id: str) -> Dict
+    def get_recommended_model(use_case: str) -> str
+```
+
+#### **2. Enhanced API Endpoints**
+```python
+# New Frontend-Ready Endpoints:
+GET    /api/v1/llm/models                    # List all models with specs
+GET    /api/v1/llm/models/{model_id}         # Get model details
+POST   /api/v1/llm/models/recommend          # Smart recommendations
+POST   /api/v1/llm/models/{model_id}/benchmark # Performance testing
+POST   /api/v1/llm/chat                      # Chat with model selection
+POST   /api/v1/llm/summarize                 # Summarize with model selection
+```
+
+### **Updated Architecture Flow**
+
+#### **Dynamic Model Selection Flow:**
+```
+Frontend Request
+      │
+      ▼
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│   Router    │───▶│ LLM Handler  │───▶│ LLM Service │
+│             │    │              │    │             │
+└─────────────┘    └──────────────┘    └─────────────┘
+      │                     │                   │
+      ▼                     ▼                   ▼
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│  Model      │◀───│ Model        │◀───│ Dynamic     │
+│ Selection   │    │ Recommendation│    │ Accessor    │
+│ Response    │    │              │    │ Creation    │
+└─────────────┘    └──────────────┘    └─────────────┘
+```
+
+#### **Model Management Matrix:**
+| Model | Type | Performance | Quality | Use Case |
+|-------|------|-------------|---------|----------|
+| llama3.1:8b | Local | Slow | High | Complex analysis |
+| llama3.1:3b | Local | Fast | Medium | Quick summaries |
+| gemini-2.5-flash | Remote | Fast | High | Real-time chat |
+| gpt-3.5-turbo | Remote | Medium | High | General tasks |
+
+### **Frontend Integration Capabilities**
+
+#### **Model Selection API:**
+```javascript
+// Get available models
+const models = await fetch('/api/v1/llm/models').then(r => r.json());
+
+// Get recommendation for use case
+const rec = await fetch('/api/v1/llm/models/recommend', {
+  method: 'POST',
+  body: JSON.stringify({ use_case: 'quick_summary' })
+}).then(r => r.json());
+
+// Chat with selected model
+const response = await fetch('/api/v1/llm/chat', {
+  method: 'POST',
+  body: JSON.stringify({
+    message: "Hello!",
+    model_id: "llama3.1:3b"
+  })
+}).then(r => r.json());
+```
+
+### **Performance Optimizations Applied**
+
+#### **Configuration Updates:**
+```env
+# Optimized for better performance
+LOCAL_LLM_CONTEXT_LENGTH=2048    # Reduced from 4096
+LOCAL_LLM_MAX_TOKENS=256         # Reduced from 512
+LOCAL_LLM_THREADS=8              # Optimized for CPU
+LOCAL_LLM_BATCH_SIZE=1           # Single request optimization
+```
+
+#### **Expected Performance Improvements:**
+- **8B Model**: 60s → 15-20s (with optimizations)
+- **3B Model**: 15-20s → 5-8s (recommended for quick tasks)
+- **Memory Usage**: 5-6GB → 2.5GB (with 3B model)
+- **User Experience**: Real-time model switching
+
+### **Production Deployment Updates**
+
+#### **New Deployment Considerations:**
+1. **Multi-Model Support**: Deploy both 3B and 8B models
+2. **Model Warm-up**: Keep frequently used models loaded
+3. **Load Balancing**: Route requests to appropriate models
+4. **Performance Monitoring**: Track model usage and performance
+
+#### **Scaling Strategy:**
+```
+Production Setup:
+├── Fast Response Tier (3B Model)
+│   ├── Quick summaries
+│   ├── Simple Q&A
+│   └── Task enhancement
+├── Quality Tier (8B Model)
+│   ├── Complex analysis
+│   ├── Detailed summaries
+│   └── Creative tasks
+└── Remote Tier (API Models)
+    ├── Real-time chat
+    ├── Fallback option
+    └── High availability
+```
+
+### **Integration Status**
+
+#### **✅ Completed Features:**
+- Dynamic model discovery and selection
+- Performance benchmarking system
+- Smart model recommendations
+- Frontend-ready API endpoints
+- Backward compatibility maintained
+- Production-optimized configuration
+
+#### **🚀 Ready for Frontend Integration:**
+- Model selection dropdowns
+- Performance indicators
+- Use case-based recommendations
+- Real-time model switching
+- Comprehensive model information display
+
+**The Saaransh backend now supports full dynamic LLM model selection with production-ready APIs for seamless frontend integration!** 🎉
